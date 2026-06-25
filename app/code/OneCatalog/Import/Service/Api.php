@@ -74,11 +74,13 @@ class Api
         $body = curl_exec($ch);
         $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $type = (string) curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+        $err = curl_error($ch);
         curl_close($ch);
 
         if ($body === false || $code < 200 || $code >= 300 || $body === '') {
-            return null;
+            // Не null — отдаём диагностику (HTTP-код/ошибка curl) вызывающему для лога.
+            return array('body' => null, 'content_type' => $type, 'code' => $code, 'error' => (string) $err);
         }
-        return array('body' => $body, 'content_type' => $type);
+        return array('body' => $body, 'content_type' => $type, 'code' => $code, 'error' => '');
     }
 }

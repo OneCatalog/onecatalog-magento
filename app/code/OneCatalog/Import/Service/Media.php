@@ -3,16 +3,28 @@ namespace OneCatalog\Import\Service;
 
 class Media
 {
-    /** Порядок предпочтения размера: с токеном — max, без — middle. */
-    public static function pickSizeInfo(array $urls, $hasToken)
+    /**
+     * Упорядоченный список доступных размеров (для скачивания с фолбэком).
+     * С токеном — max→middle→min; БЕЗ токена `min` первым: по §5.3 без токена
+     * публично отдаётся только min, а middle/max-URL вернут 403.
+     */
+    public static function sizeCandidates(array $urls, $hasToken)
     {
-        $order = $hasToken ? array('max', 'middle', 'min') : array('middle', 'max', 'min');
+        $order = $hasToken ? array('max', 'middle', 'min') : array('min', 'middle', 'max');
+        $out = array();
         foreach ($order as $size) {
             if (!empty($urls[$size])) {
-                return array('url' => (string) $urls[$size], 'size' => (string) $size);
+                $out[] = array('size' => (string) $size, 'url' => (string) $urls[$size]);
             }
         }
-        return array('url' => '', 'size' => '');
+        return $out;
+    }
+
+    /** Предпочитаемый размер (первый кандидат) — для сигнатуры/одиночного выбора. */
+    public static function pickSizeInfo(array $urls, $hasToken)
+    {
+        $cand = self::sizeCandidates($urls, $hasToken);
+        return $cand ? $cand[0] : array('url' => '', 'size' => '');
     }
 
     public static function sizeRank($size)

@@ -11,16 +11,19 @@ namespace OneCatalog\Import\Service;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\ResourceConnection;
+use Psr\Log\LoggerInterface;
 
 class MediaStore
 {
     private $resource;
     private $scopeConfig;
+    private $logger;
 
-    public function __construct(ResourceConnection $resource, ScopeConfigInterface $scopeConfig)
+    public function __construct(ResourceConnection $resource, ScopeConfigInterface $scopeConfig, LoggerInterface $logger)
     {
         $this->resource = $resource;
         $this->scopeConfig = $scopeConfig;
+        $this->logger = $logger;
     }
 
     /**
@@ -36,9 +39,9 @@ class MediaStore
         $items = [];
         $coverUrls = is_array($p['images_urls'] ?? null) ? $p['images_urls'] : [];
         if ($coverUrls) {
-            $pick = Media::pickSizeInfo($coverUrls, $hasToken);
-            if ($pick['url'] !== '') {
-                $items[] = ['url' => $pick['url'], 'size' => $pick['size'], 'key' => 'cover', 'cover' => true];
+            $cand = Media::sizeCandidates($coverUrls, $hasToken);
+            if ($cand) {
+                $items[] = ['candidates' => $cand, 'key' => 'cover', 'cover' => true];
             }
         }
         foreach (($p['files'] ?? []) as $f) {
@@ -50,42 +53,70 @@ class MediaStore
                 continue;
             }
             $urls = is_array($f['urls'] ?? null) ? $f['urls'] : [];
-            $pick = Media::pickSizeInfo($urls, $hasToken);
-            if ($pick['url'] === '') {
+            $cand = Media::sizeCandidates($urls, $hasToken);
+            if (!$cand) {
                 continue;
             }
+            $firstUrl = $cand[0]['url'];
             $name = is_scalar($f['name'] ?? null) && (string) $f['name'] !== ''
                 ? (string) $f['name']
-                : (string) (Media::fileKey($pick['url']) ?: $pick['url']);
-            $items[] = ['url' => $pick['url'], 'size' => $pick['size'], 'key' => $name, 'cover' => false];
+                : (string) (Media::fileKey($firstUrl) ?: $firstUrl);
+            $items[] = ['candidates' => $cand, 'key' => $name, 'cover' => false];
         }
 
         if (!$items) {
             return null;
         }
 
+        // Сигнатура набора — по предпочитаемому размеру (детерминированно из payload).
         $sigParts = [];
         foreach ($items as $it) {
-            $sigParts[] = $it['key'] . ':' . $it['size'];
+            $sigParts[] = $it['key'] . ':' . $it['candidates'][0]['size'];
         }
         $sig = sha1(implode('|', $sigParts));
         if ($priorSig !== '' && $priorSig === $sig) {
             return null; // не изменилось и качество не лучше
         }
 
+        $applied = 0;
         foreach ($items as $it) {
-            $file = $this->sideloadSource($it['url'], $it['size']);
+            $file = $this->sideloadFirst($it['candidates']);
             if ($file === '') {
                 continue;
             }
             try {
                 $types = $it['cover'] ? ['image', 'small_image', 'thumbnail'] : [];
                 $product->addImageToMediaGallery($file, $types, false, false);
+                $applied++;
             } catch (\Throwable $e) {
-                // одна битая картинка не валит импорт (§5.5)
+                // одна битая картинка не валит импорт (§5.5), но фиксируем причину
+                $this->logger->warning('OneCatalog: addImageToMediaGallery failed: ' . $e->getMessage(), ['key' => $it['key']]);
             }
         }
+
+        if ($applied === 0) {
+            // Ничего не применили — НЕ сохраняем сигнатуру, чтобы повтор (напр. после ввода
+            // токена) попробовал снова. Причина уже залогирована в sideload/getBinary.
+            $this->logger->warning('OneCatalog: no images applied', [
+                'public_id' => is_scalar($p['public_id'] ?? null) ? (string) $p['public_id'] : '',
+                'items' => count($items),
+                'has_token' => $hasToken,
+            ]);
+            return null;
+        }
         return $sig;
+    }
+
+    /** Скачать первый из кандидатов, что отдался успешно (фолбэк по размерам). */
+    private function sideloadFirst(array $candidates)
+    {
+        foreach ($candidates as $c) {
+            $file = $this->sideloadSource($c['url'], $c['size']);
+            if ($file !== '') {
+                return $file;
+            }
+        }
+        return '';
     }
 
     /** Скачать исходник с дедупом по контент-ключу → локальный путь или ''. */
@@ -111,7 +142,12 @@ class MediaStore
             (string) ($this->scopeConfig->getValue('onecatalog/general/lang') ?: 'en')
         );
         $bin = $api->getBinary($url);
-        if ($bin === null) {
+        if (!is_array($bin) || ($bin['body'] ?? null) === null || $bin['body'] === '') {
+            $this->logger->warning('OneCatalog: image download failed', [
+                'url' => $url,
+                'http' => is_array($bin) ? ($bin['code'] ?? 0) : 0,
+                'curl_error' => is_array($bin) ? ($bin['error'] ?? '') : '',
+            ]);
             return '';
         }
         $ext = Media::mimeToExt($bin['content_type']);
@@ -121,6 +157,7 @@ class MediaStore
             finfo_close($fi);
         }
         if ($ext === null) {
+            $this->logger->warning('OneCatalog: unknown image MIME', ['url' => $url, 'content_type' => $bin['content_type']]);
             return '';
         }
         $dir = rtrim(sys_get_temp_dir(), '/') . '/onecatalog';
