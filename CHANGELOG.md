@@ -9,6 +9,16 @@
 
 ## [Не выпущено] — бэклог
 
+### Реализовано на `dev` — справочные сущности (версия 0.5.0)
+- **Бренд → нативный атрибут `manufacturer`** (select): find-or-create опции по метке
+  (AttributeOptionManagement), установка значения товару.
+- **Теги → атрибут `oc_tags`**, **страна → `oc_country`**, **коллекции → `oc_collection`
+  ИЛИ категории** (выбор цели). Атрибуты — find-or-create (varchar).
+- Все справочные сущности **по умолчанию выключены** (§3/§7 v1.2), «нативное прежде
+  своего». Группа «references» в `system.xml` (Stores → Configuration) + source-модель
+  `CollectionTarget`. Дефолты в `config.xml`.
+
+
 ### Реализовано на `dev` — пикер + AJAX-степпер импорта + UX (версия 0.4.0)
 - **Пикер** (`view/adminhtml/web/js/picker-loader.js`, §2.4 v1.2): iframe, `parentOrigin =
   window.location.origin`, доверие по `event.source`, JSON-строка, своя × + Esc (порт OpenCart).

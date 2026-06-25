@@ -17,6 +17,14 @@
                 <field id="new_active" translate="label" type="select" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1"><label>New product status (enabled)</label><source_model>Magento\Config\Model\Config\Source\Yesno</source_model></field>
                 <field id="picker_base" translate="label" type="text" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1"><label>Picker base URL</label></field>
             </group>
+            <group id="references" translate="label" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Reference entities (off by default; native-first)</label>
+                <field id="import_brand" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1"><label>Import brand (→ native Manufacturer)</label><source_model>Magento\Config\Model\Config\Source\Yesno</source_model></field>
+                <field id="import_tags" translate="label" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1"><label>Import tags (→ attribute)</label><source_model>Magento\Config\Model\Config\Source\Yesno</source_model></field>
+                <field id="import_country" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1"><label>Import country (→ attribute)</label><source_model>Magento\Config\Model\Config\Source\Yesno</source_model></field>
+                <field id="import_collections" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1"><label>Import collections</label><source_model>Magento\Config\Model\Config\Source\Yesno</source_model></field>
+                <field id="collection_target" translate="label" type="select" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1"><label>Collections target</label><source_model>OneCatalog\Import\Model\Config\Source\CollectionTarget</source_model></field>
+            </group>
         </section>
     </system>
 </config>

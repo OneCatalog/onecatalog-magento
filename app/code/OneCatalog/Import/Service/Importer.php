@@ -18,6 +18,9 @@ use Magento\Catalog\Model\Product\Attribute\Source\Status;
 use Magento\Catalog\Model\Product\Visibility;
 use Magento\Catalog\Model\ResourceModel\Category\CollectionFactory as CategoryCollectionFactory;
 use Magento\Eav\Api\AttributeRepositoryInterface;
+use Magento\Eav\Api\AttributeOptionManagementInterface;
+use Magento\Eav\Api\Data\AttributeOptionInterfaceFactory;
+use Magento\Eav\Api\Data\AttributeOptionLabelInterfaceFactory;
 use Magento\Eav\Model\Config as EavConfig;
 use Magento\Eav\Setup\EavSetupFactory;
 use Magento\Framework\App\Config\ScopeConfigInterface;
@@ -41,6 +44,9 @@ class Importer
     private $resource;
     private $scopeConfig;
     private $mediaStore;
+    private $optionManagement;
+    private $optionFactory;
+    private $optionLabelFactory;
 
     /** @var array<string,string> кэш существующих кодов атрибутов */
     private $attrCache = [];
@@ -58,7 +64,10 @@ class Importer
         AttributeRepositoryInterface $attributeRepository,
         ResourceConnection $resource,
         ScopeConfigInterface $scopeConfig,
-        MediaStore $mediaStore
+        MediaStore $mediaStore,
+        AttributeOptionManagementInterface $optionManagement,
+        AttributeOptionInterfaceFactory $optionFactory,
+        AttributeOptionLabelInterfaceFactory $optionLabelFactory
     ) {
         $this->productRepository = $productRepository;
         $this->productFactory = $productFactory;
@@ -73,6 +82,9 @@ class Importer
         $this->resource = $resource;
         $this->scopeConfig = $scopeConfig;
         $this->mediaStore = $mediaStore;
+        $this->optionManagement = $optionManagement;
+        $this->optionFactory = $optionFactory;
+        $this->optionLabelFactory = $optionLabelFactory;
     }
 
     public function importByPublicId($publicId)
@@ -141,8 +153,9 @@ class Importer
                 $product->setCustomAttribute($f['code'], $f['value']);
             }
 
-            // Категории.
+            // Категории + справочные сущности (§3/§7, по умолчанию выкл).
             $catIds = $this->resolveCategories($p);
+            $this->applyReferences($product, $p, $catIds);
             if ($catIds) {
                 $product->setCategoryIds($catIds);
             }
@@ -251,6 +264,103 @@ class Importer
         } catch (\Throwable $e) {
             // если не удалось создать — пропускаем характеристику (не валим импорт §5.5)
         }
+    }
+
+    // --- справочные сущности (§3/§7: нативное прежде своего, по умолчанию выкл) -
+
+    private function applyReferences($product, array $p, array &$catIds)
+    {
+        // Бренд → нативный атрибут manufacturer (select), find-or-create опции.
+        if ($this->refEnabled('import_brand')) {
+            $brand = trim((string) ($p['brand']['menutitle'] ?? $p['brand']['name'] ?? ''));
+            if ($brand !== '') {
+                $optId = $this->ensureManufacturerOption($brand);
+                if ($optId) {
+                    $product->setData('manufacturer', $optId);
+                }
+            }
+        }
+        // Теги → атрибут oc_tags (в Magento 2 нет нативных тегов).
+        if ($this->refEnabled('import_tags') && is_array($p['tags'] ?? null)) {
+            $names = [];
+            foreach ($p['tags'] as $t) {
+                $n = trim((string) (is_array($t) ? ($t['title'] ?? $t['name'] ?? '') : $t));
+                if ($n !== '') {
+                    $names[$n] = $n;
+                }
+            }
+            if ($names) {
+                $this->ensureAttribute('oc_tags', 'Tags');
+                $product->setCustomAttribute('oc_tags', implode(', ', array_values($names)));
+            }
+        }
+        // Страна → атрибут oc_country.
+        if ($this->refEnabled('import_country')) {
+            $country = trim((string) ($p['country']['menutitle'] ?? $p['country']['name'] ?? ''));
+            if ($country !== '') {
+                $this->ensureAttribute('oc_country', 'Country');
+                $product->setCustomAttribute('oc_country', $country);
+            }
+        }
+        // Коллекции → атрибут oc_collection ИЛИ категории (выбор цели).
+        if ($this->refEnabled('import_collections') && is_array($p['collections'] ?? null)) {
+            $names = [];
+            foreach ($p['collections'] as $c) {
+                $n = trim((string) (is_array($c) ? ($c['menutitle'] ?? $c['name'] ?? '') : $c));
+                if ($n !== '') {
+                    $names[$n] = $n;
+                }
+            }
+            if ($names) {
+                $target = (string) ($this->scopeConfig->getValue('onecatalog/references/collection_target') ?: 'feature');
+                if ($target === 'category') {
+                    $rootId = (int) $this->storeManager->getStore()->getRootCategoryId();
+                    foreach ($names as $n) {
+                        $cid = $this->ensureCategory($n, $rootId);
+                        if ($cid) {
+                            $catIds[] = $cid;
+                        }
+                    }
+                    $catIds = array_values(array_unique(array_map('intval', $catIds)));
+                } else {
+                    $this->ensureAttribute('oc_collection', 'Collection');
+                    $product->setCustomAttribute('oc_collection', implode(', ', array_values($names)));
+                }
+            }
+        }
+    }
+
+    private function ensureManufacturerOption($label)
+    {
+        try {
+            $attr = $this->eavConfig->getAttribute(Product::ENTITY, 'manufacturer');
+            if (!$attr || !$attr->getId()) {
+                return null;
+            }
+            $optId = $attr->getSource()->getOptionId($label);
+            if ($optId) {
+                return $optId;
+            }
+            $optionLabel = $this->optionLabelFactory->create();
+            $optionLabel->setStoreId(0);
+            $optionLabel->setLabel($label);
+            $option = $this->optionFactory->create();
+            $option->setLabel($label);
+            $option->setStoreLabels([$optionLabel]);
+            $option->setSortOrder(0);
+            $option->setIsDefault(false);
+            $this->optionManagement->add(Product::ENTITY, 'manufacturer', $option);
+            $this->eavConfig->clear();
+            $attr = $this->eavConfig->getAttribute(Product::ENTITY, 'manufacturer');
+            return $attr->getSource()->getOptionId($label) ?: null;
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
+    private function refEnabled($key)
+    {
+        return (int) $this->scopeConfig->getValue('onecatalog/references/' . $key) === 1;
     }
 
     // --- категории -----------------------------------------------------------
