@@ -25,6 +25,7 @@ use Magento\Eav\Model\Config as EavConfig;
 use Magento\Eav\Setup\EavSetupFactory;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\ResourceConnection;
+use Magento\Framework\Event\ManagerInterface as EventManager;
 use Magento\Framework\Setup\ModuleDataSetupInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Eav\Model\Entity\Attribute\ScopedAttributeInterface;
@@ -47,6 +48,7 @@ class Importer
     private $optionManagement;
     private $optionFactory;
     private $optionLabelFactory;
+    private $eventManager;
 
     /** @var array<string,string> кэш существующих кодов атрибутов */
     private $attrCache = [];
@@ -67,7 +69,8 @@ class Importer
         MediaStore $mediaStore,
         AttributeOptionManagementInterface $optionManagement,
         AttributeOptionInterfaceFactory $optionFactory,
-        AttributeOptionLabelInterfaceFactory $optionLabelFactory
+        AttributeOptionLabelInterfaceFactory $optionLabelFactory,
+        EventManager $eventManager
     ) {
         $this->productRepository = $productRepository;
         $this->productFactory = $productFactory;
@@ -85,6 +88,7 @@ class Importer
         $this->optionManagement = $optionManagement;
         $this->optionFactory = $optionFactory;
         $this->optionLabelFactory = $optionLabelFactory;
+        $this->eventManager = $eventManager;
     }
 
     public function importByPublicId($publicId)
@@ -172,6 +176,11 @@ class Importer
             if ($mediaSig !== null) {
                 $this->metaSet($id, 'media_sig', $mediaSig);
             }
+
+            // Событие §8 — сайтовый слой дозаполняет поля, не входящие в ядро.
+            $this->eventManager->dispatch('onecatalog_product_imported', [
+                'id_product' => $id, 'public_id' => $publicId, 'status' => $isNew ? 'created' : 'updated', 'payload' => $p,
+            ]);
 
             return ['status' => $isNew ? 'created' : 'updated', 'public_id' => $publicId, 'id_product' => $id];
         } catch (\Throwable $e) {

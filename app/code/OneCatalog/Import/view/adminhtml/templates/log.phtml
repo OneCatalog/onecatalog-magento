@@ -1,0 +1,27 @@
+<?php /** @var \OneCatalog\Import\Block\Adminhtml\Log $block */ ?>
+<div class="admin__data-grid-wrap">
+  <p class="note"><?= $block->escapeHtml(__('Last 200 catalog import results (created / updated / error).')) ?></p>
+  <table class="data-grid">
+    <thead><tr>
+      <th class="data-grid-th"><?= $block->escapeHtml(__('Time')) ?></th>
+      <th class="data-grid-th">public_id</th>
+      <th class="data-grid-th"><?= $block->escapeHtml(__('Status')) ?></th>
+      <th class="data-grid-th"><?= $block->escapeHtml(__('Message')) ?></th>
+    </tr></thead>
+    <tbody>
+    <?php $rows = $block->getEntries(); ?>
+    <?php if ($rows): ?>
+      <?php foreach ($rows as $r): ?>
+        <tr>
+          <td><?= $block->escapeHtml((string) $r['created_at']) ?></td>
+          <td><?= $block->escapeHtml((string) $r['public_id']) ?></td>
+          <td><?= $block->escapeHtml((string) $r['status']) ?></td>
+          <td><?= $block->escapeHtml((string) $r['message']) ?></td>
+        </tr>
+      <?php endforeach; ?>
+    <?php else: ?>
+      <tr><td colspan="4"><?= $block->escapeHtml(__('No entries yet.')) ?></td></tr>
+    <?php endif; ?>
+    </tbody>
+  </table>
+</div>

@@ -14,6 +14,7 @@ use Magento\CatalogInventory\Api\StockRegistryInterface;
 use Magento\CatalogInventory\Api\StockItemRepositoryInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\ResourceConnection;
+use Magento\Framework\Event\ManagerInterface as EventManager;
 
 class B2bSync
 {
@@ -22,19 +23,22 @@ class B2bSync
     private $productAction;
     private $stockRegistry;
     private $stockItemRepository;
+    private $eventManager;
 
     public function __construct(
         ResourceConnection $resource,
         ScopeConfigInterface $scopeConfig,
         ProductAction $productAction,
         StockRegistryInterface $stockRegistry,
-        StockItemRepositoryInterface $stockItemRepository
+        StockItemRepositoryInterface $stockItemRepository,
+        EventManager $eventManager
     ) {
         $this->resource = $resource;
         $this->scopeConfig = $scopeConfig;
         $this->productAction = $productAction;
         $this->stockRegistry = $stockRegistry;
         $this->stockItemRepository = $stockItemRepository;
+        $this->eventManager = $eventManager;
     }
 
     public function processPage($start = 0, $limit = 200)
@@ -131,6 +135,11 @@ class B2bSync
             $flat[] = $c['supplier_id'] . ':' . $c['code'];
         }
         $this->metaSet($entityId, 'supplier_code', implode(',', $flat));
+
+        // Событие §13.7 — сырые офферы → раскладка по регионам/складам сайтовым слоем.
+        $this->eventManager->dispatch('onecatalog_pricestock_updated', [
+            'entity_id' => (int) $entityId, 'record' => $rec, 'offers' => $offers,
+        ]);
     }
 
     private function cfg()

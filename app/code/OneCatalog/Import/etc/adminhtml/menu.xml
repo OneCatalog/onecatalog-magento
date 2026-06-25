@@ -4,6 +4,7 @@
         <add id="OneCatalog_Import::main" title="OneCatalog" translate="title" module="OneCatalog_Import" sortOrder="80" resource="OneCatalog_Import::main"/>
         <add id="OneCatalog_Import::import" title="Import" translate="title" module="OneCatalog_Import" sortOrder="10" parent="OneCatalog_Import::main" action="onecatalog/import/index" resource="OneCatalog_Import::import"/>
         <add id="OneCatalog_Import::b2b" title="Prices &amp; stock" translate="title" module="OneCatalog_Import" sortOrder="20" parent="OneCatalog_Import::main" action="onecatalog/b2b/index" resource="OneCatalog_Import::b2b"/>
+        <add id="OneCatalog_Import::log" title="Import log" translate="title" module="OneCatalog_Import" sortOrder="30" parent="OneCatalog_Import::main" action="onecatalog/log/index" resource="OneCatalog_Import::log"/>
         <add id="OneCatalog_Import::config" title="Settings" translate="title" module="OneCatalog_Import" sortOrder="50" parent="OneCatalog_Import::main" action="adminhtml/system_config/edit/section/onecatalog" resource="OneCatalog_Import::config"/>
     </menu>
 </config>
