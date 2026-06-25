@@ -1,0 +1,23 @@
+{
+    "onecatalog_map": {
+        "column": {"entity_id": true, "public_id": true},
+        "constraint": {"PRIMARY": true, "ONECATALOG_MAP_PUBLIC_ID": true}
+    },
+    "onecatalog_meta": {
+        "column": {"id_meta": true, "entity_id": true, "meta_key": true, "value": true},
+        "constraint": {"PRIMARY": true, "ONECATALOG_META_ENTITY_KEY": true}
+    },
+    "onecatalog_media": {
+        "column": {"id_media": true, "content_key": true, "size": true, "file": true, "shared": true, "created_at": true},
+        "constraint": {"PRIMARY": true, "ONECATALOG_MEDIA_KEY": true}
+    },
+    "onecatalog_b2b_staging": {
+        "column": {"id_staging": true, "supplier_id": true, "code": true, "name": true, "data": true, "status": true, "created_at": true, "updated_at": true},
+        "constraint": {"PRIMARY": true, "ONECATALOG_STAGING_SUP_CODE": true}
+    },
+    "onecatalog_log": {
+        "column": {"id_log": true, "public_id": true, "status": true, "message": true, "created_at": true},
+        "constraint": {"PRIMARY": true},
+        "index": {"ONECATALOG_LOG_CREATED": true}
+    }
+}

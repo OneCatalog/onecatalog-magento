@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+    <default>
+        <onecatalog>
+            <general>
+                <api_base>https://api.onecatalog.net/wiki/v1</api_base>
+                <api_token></api_token>
+                <lang>en</lang>
+                <step>10</step>
+                <new_active>1</new_active>
+                <picker_base>https://tools.onecatalog.net</picker_base>
+            </general>
+            <references>
+                <import_brand>0</import_brand>
+                <import_tags>0</import_tags>
+                <import_country>0</import_country>
+                <import_collections>0</import_collections>
+                <collection_target>attribute</collection_target>
+            </references>
+            <b2b>
+                <base>https://api.onecatalog.net/b2b/v1</base>
+                <url_key></url_key>
+                <private_key></private_key>
+                <strategy>min</strategy>
+                <region_priority></region_priority>
+                <supplier_priority></supplier_priority>
+                <supplier_fixed>0</supplier_fixed>
+                <promo_as_sale>1</promo_as_sale>
+                <manage_stock>1</manage_stock>
+            </b2b>
+        </onecatalog>
+    </default>
+</config>

@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
+    <system>
+        <tab id="onecatalog" translate="label" sortOrder="400">
+            <label>OneCatalog</label>
+        </tab>
+        <section id="onecatalog" translate="label" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>OneCatalog Import</label>
+            <tab>onecatalog</tab>
+            <resource>OneCatalog_Import::config</resource>
+            <group id="general" translate="label" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>General</label>
+                <field id="api_base" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1"><label>Wiki API base URL</label></field>
+                <field id="api_token" translate="label" type="obscure" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1"><label>API token</label><backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model><comment>X-API-Key for Wiki API and the picker widget.</comment></field>
+                <field id="lang" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1"><label>Product language</label><comment>e.g. en, ru</comment></field>
+                <field id="step" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1"><label>Import step (batch size)</label><comment>Minimum 10.</comment></field>
+                <field id="new_active" translate="label" type="select" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1"><label>New product status (enabled)</label><source_model>Magento\Config\Model\Config\Source\Yesno</source_model></field>
+                <field id="picker_base" translate="label" type="text" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1"><label>Picker base URL</label></field>
+            </group>
+        </section>
+    </system>
+</config>

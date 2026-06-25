@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
+    <!-- §5.1: служебные данные вне атрибутов товара -->
+    <table name="onecatalog_map" resource="default" engine="innodb" comment="OneCatalog public_id map (idempotency)">
+        <column xsi:type="int" name="entity_id" unsigned="true" nullable="false" comment="Product entity_id"/>
+        <column xsi:type="varchar" name="public_id" nullable="false" length="64" comment="OneCatalog public_id"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY"><column name="entity_id"/></constraint>
+        <constraint xsi:type="unique" referenceId="ONECATALOG_MAP_PUBLIC_ID"><column name="public_id"/></constraint>
+    </table>
+    <table name="onecatalog_meta" resource="default" engine="innodb" comment="OneCatalog service meta per product">
+        <column xsi:type="int" name="id_meta" unsigned="true" nullable="false" identity="true"/>
+        <column xsi:type="int" name="entity_id" unsigned="true" nullable="false"/>
+        <column xsi:type="varchar" name="meta_key" nullable="false" length="50"/>
+        <column xsi:type="mediumtext" name="value" nullable="true"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY"><column name="id_meta"/></constraint>
+        <constraint xsi:type="unique" referenceId="ONECATALOG_META_ENTITY_KEY"><column name="entity_id"/><column name="meta_key"/></constraint>
+    </table>
+    <table name="onecatalog_media" resource="default" engine="innodb" comment="OneCatalog media dedup cache">
+        <column xsi:type="int" name="id_media" unsigned="true" nullable="false" identity="true"/>
+        <column xsi:type="varchar" name="content_key" nullable="false" length="64"/>
+        <column xsi:type="varchar" name="size" nullable="false" length="8" default="min"/>
+        <column xsi:type="varchar" name="file" nullable="false" length="255"/>
+        <column xsi:type="smallint" name="shared" unsigned="true" nullable="false" default="0"/>
+        <column xsi:type="datetime" name="created_at" nullable="false" default="CURRENT_TIMESTAMP"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY"><column name="id_media"/></constraint>
+        <constraint xsi:type="unique" referenceId="ONECATALOG_MEDIA_KEY"><column name="content_key"/></constraint>
+    </table>
+    <table name="onecatalog_b2b_staging" resource="default" engine="innodb" comment="OneCatalog B2B unknown staging">
+        <column xsi:type="int" name="id_staging" unsigned="true" nullable="false" identity="true"/>
+        <column xsi:type="int" name="supplier_id" nullable="true"/>
+        <column xsi:type="varchar" name="code" nullable="false" length="128"/>
+        <column xsi:type="varchar" name="name" nullable="true" length="512"/>
+        <column xsi:type="mediumtext" name="data" nullable="true"/>
+        <column xsi:type="varchar" name="status" nullable="false" length="16" default="new"/>
+        <column xsi:type="datetime" name="created_at" nullable="false" default="CURRENT_TIMESTAMP"/>
+        <column xsi:type="datetime" name="updated_at" nullable="true"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY"><column name="id_staging"/></constraint>
+        <constraint xsi:type="unique" referenceId="ONECATALOG_STAGING_SUP_CODE"><column name="supplier_id"/><column name="code"/></constraint>
+    </table>
+    <table name="onecatalog_log" resource="default" engine="innodb" comment="OneCatalog import log">
+        <column xsi:type="int" name="id_log" unsigned="true" nullable="false" identity="true"/>
+        <column xsi:type="varchar" name="public_id" nullable="false" length="64"/>
+        <column xsi:type="varchar" name="status" nullable="false" length="16"/>
+        <column xsi:type="text" name="message" nullable="true"/>
+        <column xsi:type="datetime" name="created_at" nullable="false" default="CURRENT_TIMESTAMP"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY"><column name="id_log"/></constraint>
+        <index referenceId="ONECATALOG_LOG_CREATED" indexType="btree"><column name="created_at"/></index>
+    </table>
+</schema>

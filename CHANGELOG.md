@@ -9,6 +9,18 @@
 
 ## [Не выпущено] — бэклог
 
+### Реализовано на `dev` — каркас модуля (версия 0.1.0)
+- **Модуль `OneCatalog_Import`** (Magento 2.4.x): `registration.php`, `etc/module.xml`
+  (sequence Catalog/CatalogInventory/Backend), `composer.json` (PSR-4 `OneCatalog\Import`).
+- **Служебные таблицы** (declarative `etc/db_schema.xml` + whitelist, §5.1 — служебное вне
+  атрибутов товара): `onecatalog_map` (идемпотентность public_id ↔ entity_id),
+  `onecatalog_meta`, `onecatalog_media`, `onecatalog_b2b_staging`, `onecatalog_log`.
+- **Настройки** (`etc/config.xml` дефолты + `etc/adminhtml/system.xml`): Stores →
+  Configuration → OneCatalog — база/токен Wiki, язык, шаг (≥10), статус новых, origin
+  пикера. ACL (`acl.xml`), пункт меню (`menu.xml`), admin-route (`routes.xml`).
+- ⚠️ Следующий инкремент 0.2.0 — ядро импорта одного товара (§5).
+
+
 ### Дизайн (до кода)
 - `docs/integration-plan.md` — маппинг сущностей и реализация под Magento 2.4.x.
 - `docs/integration-answers.md` — решения по вопросам (до старта кода).

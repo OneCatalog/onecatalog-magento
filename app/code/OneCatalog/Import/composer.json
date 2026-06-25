@@ -1,0 +1,21 @@
+{
+    "name": "onecatalog/module-import",
+    "description": "OneCatalog catalog import + B2B price/stock sync for Magento 2.4.x",
+    "type": "magento2-module",
+    "version": "0.1.0",
+    "license": "OSL-3.0",
+    "require": {
+        "php": ">=8.1",
+        "magento/framework": "*",
+        "magento/module-catalog": "*",
+        "magento/module-catalog-inventory": "*"
+    },
+    "autoload": {
+        "files": [
+            "registration.php"
+        ],
+        "psr-4": {
+            "OneCatalog\\Import\\": ""
+        }
+    }
+}
