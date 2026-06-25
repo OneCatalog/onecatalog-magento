@@ -9,6 +9,13 @@
 
 ## [Не выпущено] — бэклог
 
+### Исправлено на `dev` — фатал видимости свойства (версия 0.7.1)
+- `Block\Adminhtml\Import` и `Block\Adminhtml\B2b` объявляли `private $formKey`, сужая
+  видимость унаследованного `protected $formKey` из `Magento\Backend\Block\Template` →
+  PHP Fatal error при открытии страниц. Свойство переименовано в `private $ocFormKey`
+  (без конфликта с родителем).
+
+
 ### Реализовано на `dev` — полировка: события §8 + журнал импорта (версия 0.7.0)
 - **События §8**: `onecatalog_product_imported` (после импорта товара) и
   `onecatalog_pricestock_updated` (после записи цены/остатка, сырые офферы) —

@@ -6,12 +6,12 @@ use Magento\Framework\Data\Form\FormKey;
 
 class Import extends Template
 {
-    private $formKey;
+    private $ocFormKey;
 
     public function __construct(Template\Context $context, FormKey $formKey, array $data = [])
     {
         parent::__construct($context, $data);
-        $this->formKey = $formKey;
+        $this->ocFormKey = $formKey;
     }
 
     public function isConfigured()
@@ -31,7 +31,7 @@ class Import extends Template
             'pickerBase' => (string) ($this->_scopeConfig->getValue('onecatalog/general/picker_base') ?: 'https://tools.onecatalog.net'),
             'token' => (string) $this->_scopeConfig->getValue('onecatalog/general/api_token'),
             'step' => max(10, (int) $this->_scopeConfig->getValue('onecatalog/general/step')),
-            'formKey' => $this->formKey->getFormKey(),
+            'formKey' => $this->ocFormKey->getFormKey(),
             'messages' => [
                 'empty' => (string) __('The identifier list is empty'),
                 'importing' => (string) __('Importing…'),

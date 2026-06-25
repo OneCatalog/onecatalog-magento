@@ -6,12 +6,12 @@ use Magento\Framework\Data\Form\FormKey;
 
 class B2b extends Template
 {
-    private $formKey;
+    private $ocFormKey;
 
     public function __construct(Template\Context $context, FormKey $formKey, array $data = [])
     {
         parent::__construct($context, $data);
-        $this->formKey = $formKey;
+        $this->ocFormKey = $formKey;
     }
 
     public function isConfigured()
@@ -35,7 +35,7 @@ class B2b extends Template
         $cfg = [
             'syncUrl' => $this->getUrl('onecatalog/b2b/sync'),
             'limit' => 200,
-            'formKey' => $this->formKey->getFormKey(),
+            'formKey' => $this->ocFormKey->getFormKey(),
             'messages' => [
                 'running' => (string) __('Syncing…'),
                 'done' => (string) __('Done:'),
