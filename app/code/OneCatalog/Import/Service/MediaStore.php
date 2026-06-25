@@ -45,7 +45,7 @@ class MediaStore
             if (!is_array($f)) {
                 continue;
             }
-            $cat = (string) ($f['category'] ?? '');
+            $cat = is_scalar($f['category'] ?? null) ? (string) $f['category'] : '';
             if ($cat !== '' && $cat !== 'images') {
                 continue;
             }
@@ -54,7 +54,9 @@ class MediaStore
             if ($pick['url'] === '') {
                 continue;
             }
-            $name = (string) ($f['name'] ?? Media::fileKey($pick['url']) ?? $pick['url']);
+            $name = is_scalar($f['name'] ?? null) && (string) $f['name'] !== ''
+                ? (string) $f['name']
+                : (string) (Media::fileKey($pick['url']) ?: $pick['url']);
             $items[] = ['url' => $pick['url'], 'size' => $pick['size'], 'key' => $name, 'cover' => false];
         }
 

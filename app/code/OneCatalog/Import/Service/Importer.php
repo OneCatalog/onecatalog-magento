@@ -107,9 +107,9 @@ class Importer
             return ['status' => 'error', 'public_id' => '', 'message' => 'empty public_id'];
         }
 
-        $name = trim((string) ($p['name'] ?? $p['title'] ?? $p['menutitle'] ?? ''));
-        $description = (string) ($p['description_text'] ?? $p['description'] ?? '');
-        $article = trim((string) ($p['article'] ?? ''));
+        $name = $this->firstStr([$p['name'] ?? null, $p['title'] ?? null, $p['menutitle'] ?? null]);
+        $description = $this->firstStr([$p['description_text'] ?? null, $p['description'] ?? null]);
+        $article = $this->str($p['article'] ?? '');
         $dim = $this->resolveDimensions($p);
 
         $existingId = $this->mapGet($publicId);
@@ -201,18 +201,18 @@ class Importer
             if (!is_array($opt)) {
                 continue;
             }
-            $label = trim((string) ($opt['specification_label'] ?? ''));
+            $label = $this->str($opt['specification_label'] ?? '');
             if ($label === '') {
                 continue;
             }
             $type = (string) ($opt['specification_type'] ?? 'text');
             if ($type === 'numeric') {
                 $num = $opt['numeric_option'] ?? null;
-                $val = ($num === null || $num === '') ? '' : (string) $num;
+                $val = is_scalar($num) ? trim((string) $num) : '';
             } elseif ($type === 'boolean') {
                 $val = (($opt['bool_option'] ?? null) === true) ? 'Yes' : 'No';
             } else {
-                $val = trim((string) ($opt['specification_option_name'] ?? ''));
+                $val = $this->str($opt['specification_option_name'] ?? '');
             }
             if ($val === '') {
                 continue;
@@ -281,7 +281,7 @@ class Importer
     {
         // Бренд → нативный атрибут manufacturer (select), find-or-create опции.
         if ($this->refEnabled('import_brand')) {
-            $brand = trim((string) ($p['brand']['menutitle'] ?? $p['brand']['name'] ?? ''));
+            $brand = $this->str($p['brand']['menutitle'] ?? $p['brand']['name'] ?? '');
             if ($brand !== '') {
                 $optId = $this->ensureManufacturerOption($brand);
                 if ($optId) {
@@ -293,7 +293,7 @@ class Importer
         if ($this->refEnabled('import_tags') && is_array($p['tags'] ?? null)) {
             $names = [];
             foreach ($p['tags'] as $t) {
-                $n = trim((string) (is_array($t) ? ($t['title'] ?? $t['name'] ?? '') : $t));
+                $n = $this->str(is_array($t) ? ($t['title'] ?? $t['name'] ?? '') : $t);
                 if ($n !== '') {
                     $names[$n] = $n;
                 }
@@ -305,7 +305,7 @@ class Importer
         }
         // Страна → атрибут oc_country.
         if ($this->refEnabled('import_country')) {
-            $country = trim((string) ($p['country']['menutitle'] ?? $p['country']['name'] ?? ''));
+            $country = $this->str($p['country']['menutitle'] ?? $p['country']['name'] ?? '');
             if ($country !== '') {
                 $this->ensureAttribute('oc_country', 'Country');
                 $product->setCustomAttribute('oc_country', $country);
@@ -315,7 +315,7 @@ class Importer
         if ($this->refEnabled('import_collections') && is_array($p['collections'] ?? null)) {
             $names = [];
             foreach ($p['collections'] as $c) {
-                $n = trim((string) (is_array($c) ? ($c['menutitle'] ?? $c['name'] ?? '') : $c));
+                $n = $this->str(is_array($c) ? ($c['menutitle'] ?? $c['name'] ?? '') : $c);
                 if ($n !== '') {
                     $names[$n] = $n;
                 }
@@ -372,6 +372,24 @@ class Importer
         return (int) $this->scopeConfig->getValue('onecatalog/references/' . $key) === 1;
     }
 
+    /** Безопасное приведение значения payload к строке: массив/объект → '' (без варнинга). */
+    private function str($v)
+    {
+        return is_scalar($v) ? trim((string) $v) : '';
+    }
+
+    /** Первое непустое скалярное значение из списка кандидатов. */
+    private function firstStr(array $vals)
+    {
+        foreach ($vals as $v) {
+            $s = $this->str($v);
+            if ($s !== '') {
+                return $s;
+            }
+        }
+        return '';
+    }
+
     // --- категории -----------------------------------------------------------
 
     private function resolveCategories(array $p)
@@ -389,7 +407,7 @@ class Importer
             $parentId = $rootId;
             $leafId = 0;
             foreach ($this->categoryChain($cat) as $node) {
-                $title = trim((string) ($node['menutitle'] ?? $node['name'] ?? ''));
+                $title = $this->str($node['menutitle'] ?? $node['name'] ?? '');
                 if ($title === '') {
                     continue;
                 }
@@ -474,7 +492,7 @@ class Importer
         foreach ($keys as $k) {
             if (isset($sizes[$k]) && $sizes[$k] !== '' && is_numeric($sizes[$k])) {
                 $val = (float) $sizes[$k];
-                $unit = (string) ($sizes[$unitKey] ?? '');
+                $unit = $this->str($sizes[$unitKey] ?? '');
                 if ($unit !== '') {
                     return $kind === 'weight' ? Units::toBaseWeight($val, $unit) : Units::toBaseLength($val, $unit);
                 }
