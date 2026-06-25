@@ -9,6 +9,17 @@
 
 ## [Не выпущено] — бэклог
 
+### Реализовано на `dev` — ядро импорта одного товара (версия 0.2.0)
+- **`Service\Api` / `Service\Units`** — перенесены из PHP-портов (namespaced, чистая
+  логика). Units покрыт офлайн-тестом (`tests/units-test.php`).
+- **`Service\Importer`** — импорт одного товара через `ProductRepository`:
+  идемпотентность по `onecatalog_map` (не по sku, §5.1); `sku ← article` или `OC-<public_id>`;
+  название/описание; категории-дерево find-or-create (`CategoryRepository`); характеристики
+  → EAV-атрибуты find-or-create (varchar, группа «OneCatalog», через `EavSetup`); габариты —
+  Units (вес → кг нативно, размеры → ед. длины в `oc_*`-атрибуты). **Цена 0 и статус/sku —
+  только при создании** (§5.6); ошибки атрибута/категории не валят импорт (§5.5).
+
+
 ### Реализовано на `dev` — каркас модуля (версия 0.1.0)
 - **Модуль `OneCatalog_Import`** (Magento 2.4.x): `registration.php`, `etc/module.xml`
   (sequence Catalog/CatalogInventory/Backend), `composer.json` (PSR-4 `OneCatalog\Import`).
