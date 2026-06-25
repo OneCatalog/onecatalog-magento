@@ -40,6 +40,7 @@ class Importer
     private $attributeRepository;
     private $resource;
     private $scopeConfig;
+    private $mediaStore;
 
     /** @var array<string,string> кэш существующих кодов атрибутов */
     private $attrCache = [];
@@ -56,7 +57,8 @@ class Importer
         ModuleDataSetupInterface $moduleDataSetup,
         AttributeRepositoryInterface $attributeRepository,
         ResourceConnection $resource,
-        ScopeConfigInterface $scopeConfig
+        ScopeConfigInterface $scopeConfig,
+        MediaStore $mediaStore
     ) {
         $this->productRepository = $productRepository;
         $this->productFactory = $productFactory;
@@ -70,6 +72,7 @@ class Importer
         $this->attributeRepository = $attributeRepository;
         $this->resource = $resource;
         $this->scopeConfig = $scopeConfig;
+        $this->mediaStore = $mediaStore;
     }
 
     public function importByPublicId($publicId)
@@ -144,10 +147,17 @@ class Importer
                 $product->setCategoryIds($catIds);
             }
 
+            // Медиа: обложка + галерея (дедуп + трекинг качества, §5.3).
+            $priorSig = $existingId ? $this->metaGet((int) $existingId, 'media_sig') : '';
+            $mediaSig = $this->mediaStore->applyMediaToProduct($product, $p, $priorSig);
+
             $saved = $this->productRepository->save($product);
             $id = (int) $saved->getId();
             if ($isNew || !$existingId) {
                 $this->mapSet($id, $publicId);
+            }
+            if ($mediaSig !== null) {
+                $this->metaSet($id, 'media_sig', $mediaSig);
             }
 
             return ['status' => $isNew ? 'created' : 'updated', 'public_id' => $publicId, 'id_product' => $id];
@@ -375,6 +385,20 @@ class Importer
         $conn = $this->resource->getConnection();
         $t = $this->resource->getTableName('onecatalog_map');
         $conn->insertOnDuplicate($t, ['entity_id' => (int) $entityId, 'public_id' => (string) $publicId], ['public_id']);
+    }
+
+    private function metaGet($entityId, $key)
+    {
+        $conn = $this->resource->getConnection();
+        $t = $this->resource->getTableName('onecatalog_meta');
+        return (string) $conn->fetchOne('SELECT value FROM ' . $t . ' WHERE entity_id = ? AND meta_key = ?', [(int) $entityId, $key]);
+    }
+
+    private function metaSet($entityId, $key, $value)
+    {
+        $conn = $this->resource->getConnection();
+        $t = $this->resource->getTableName('onecatalog_meta');
+        $conn->insertOnDuplicate($t, ['entity_id' => (int) $entityId, 'meta_key' => (string) $key, 'value' => (string) $value], ['value']);
     }
 
     private function api()
