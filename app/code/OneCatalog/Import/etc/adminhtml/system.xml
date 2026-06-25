@@ -25,6 +25,18 @@
                 <field id="import_collections" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1"><label>Import collections</label><source_model>Magento\Config\Model\Config\Source\Yesno</source_model></field>
                 <field id="collection_target" translate="label" type="select" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1"><label>Collections target</label><source_model>OneCatalog\Import\Model\Config\Source\CollectionTarget</source_model></field>
             </group>
+            <group id="b2b" translate="label" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>B2B — prices &amp; stock (§13)</label>
+                <field id="base" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1"><label>B2B API base URL</label></field>
+                <field id="url_key" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1"><label>Retailer key (url_key)</label></field>
+                <field id="private_key" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1"><label>Private key</label></field>
+                <field id="strategy" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1"><label>Price strategy</label><source_model>OneCatalog\Import\Model\Config\Source\B2bStrategy</source_model></field>
+                <field id="region_priority" translate="label" type="text" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1"><label>Region priority (ids, comma)</label></field>
+                <field id="supplier_priority" translate="label" type="text" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1"><label>Supplier priority (ids, comma)</label></field>
+                <field id="supplier_fixed" translate="label" type="text" sortOrder="70" showInDefault="1" showInWebsite="1" showInStore="1"><label>Fixed supplier id</label></field>
+                <field id="promo_as_sale" translate="label" type="select" sortOrder="80" showInDefault="1" showInWebsite="1" showInStore="1"><label>Promo as special price</label><source_model>Magento\Config\Model\Config\Source\Yesno</source_model></field>
+                <field id="manage_stock" translate="label" type="select" sortOrder="90" showInDefault="1" showInWebsite="1" showInStore="1"><label>Manage stock</label><source_model>Magento\Config\Model\Config\Source\Yesno</source_model></field>
+            </group>
         </section>
     </system>
 </config>

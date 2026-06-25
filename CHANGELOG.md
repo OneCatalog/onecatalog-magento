@@ -9,6 +9,19 @@
 
 ## [Не выпущено] — бэклог
 
+### Реализовано на `dev` — §13 синхронизация цен и остатков (B2B) (версия 0.6.0)
+- **`Service\B2bApi` + `Service\PriceStock`** — перенесены из OpenCart (namespaced).
+  Резолверы покрыты офлайн-тестом (`tests/pricestock-test.php`).
+- **`Service\B2bSync`** — **scan-and-diff** (§13.4): префетч `public_id→entity_id`
+  (`onecatalog_map`) и сигнатур (`onecatalog_meta`) одним запросом; пишутся только
+  изменившиеся. Цена/скидка → `ProductAction::updateAttributes` (price/special_price,
+  без полной загрузки), остаток → `StockRegistry`. Сигнатуры/коды → `onecatalog_meta`.
+- **Страница «Prices & stock»** (`Adminhtml\B2b\Index` + `Sync` ajax) + браузерный
+  степпер (`b2b-sync.js`), блок/шаблон/layout, пункт меню. B2B-настройки — группа `b2b`
+  в `system.xml` (+ source `B2bStrategy`), дефолты в `config.xml`.
+- ✅ Оба сценария стандарта (импорт §1–§12 + цены/остатки §13) — на месте.
+
+
 ### Реализовано на `dev` — справочные сущности (версия 0.5.0)
 - **Бренд → нативный атрибут `manufacturer`** (select): find-or-create опции по метке
   (AttributeOptionManagement), установка значения товару.
