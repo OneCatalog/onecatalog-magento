@@ -5,12 +5,13 @@ class Media
 {
     /**
      * Упорядоченный список доступных размеров (для скачивания с фолбэком).
-     * С токеном — max→middle→min; БЕЗ токена `min` первым: по §5.3 без токена
-     * публично отдаётся только min, а middle/max-URL вернут 403.
+     * С токеном — max→middle→min; без токена — middle→max→min
+     * (`min` — крайний, нежелательный вариант). При неудаче одного размера
+     * скачивание пробует следующий по порядку.
      */
     public static function sizeCandidates(array $urls, $hasToken)
     {
-        $order = $hasToken ? array('max', 'middle', 'min') : array('min', 'middle', 'max');
+        $order = $hasToken ? array('max', 'middle', 'min') : array('middle', 'max', 'min');
         $out = array();
         foreach ($order as $size) {
             if (!empty($urls[$size])) {
