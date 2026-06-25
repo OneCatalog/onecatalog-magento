@@ -9,6 +9,17 @@
 
 ## [Не выпущено] — бэклог
 
+### Реализовано на `dev` — пикер + AJAX-степпер импорта + UX (версия 0.4.0)
+- **Пикер** (`view/adminhtml/web/js/picker-loader.js`, §2.4 v1.2): iframe, `parentOrigin =
+  window.location.origin`, доверие по `event.source`, JSON-строка, своя × + Esc (порт OpenCart).
+- **AJAX-степпер** (`admin-import.js`): порции → admin-контроллер (`form_key` для CSRF);
+  лоадер, сводка (создано/обновлено/ошибок), отмена, persist; пикер и поле независимы.
+- **Контроллеры** `Adminhtml\Import\Index` (страница, ACL `OneCatalog_Import::import`) и
+  `Batch` (AJAX: импорт порции через `Service\Importer`, запись в `onecatalog_log`, JSON).
+- **Block + шаблон + layout** (`import.phtml`, cfg c form_key); пункт меню «Import». EN i18n.
+- ✅ Импорт кликается end-to-end в админке Magento.
+
+
 ### Реализовано на `dev` — медиа: галерея, качество, дедуп (версия 0.3.0)
 - **`Service\Media`** — чистые хелперы (выбор размера, контент-ключ `sha1(path#size)`,
   MIME→расширение), офлайн-тест `tests/media-test.php`.

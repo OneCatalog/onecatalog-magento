@@ -1,0 +1,32 @@
+<?php /** @var \OneCatalog\Import\Block\Adminhtml\Import $block */ ?>
+<style>
+  #oc-import-app .oc-spinner { display:none; width:14px; height:14px; margin-right:7px; border:2px solid #cfd8e3; border-top-color:#2067b0; border-radius:50%; vertical-align:middle; animation:oc-spin .7s linear infinite; }
+  @keyframes oc-spin { to { transform: rotate(360deg); } }
+  #oc-import-app .oc-bar-wrap { height:6px; background:#eee; border-radius:3px; margin-top:8px; overflow:hidden; max-width:760px; }
+  #oc-import-app .oc-bar { height:100%; width:0; background:#2067b0; transition:width .2s ease; }
+  #oc-import-app .oc-bar.oc-ok { background:#3aa76d; }
+  #oc-import-app .oc-bar.oc-err { background:#d9534f; }
+  #oc-log { max-height:340px; overflow:auto; background:#f7f7f7; border:1px solid #ddd; padding:8px; white-space:pre; max-width:760px; }
+</style>
+<div id="oc-import-app">
+  <?php if (!$block->isConfigured()): ?>
+    <div class="message message-warning"><?= $block->escapeHtml(__('API token is not set. Open Stores → Configuration → OneCatalog and enter the token.')) ?></div>
+  <?php endif; ?>
+  <p><button type="button" class="action-default" id="oc-open-picker"><?= $block->escapeHtml(__('Select products (OneCatalog)')) ?></button></p>
+  <p><label for="oc-ids"><?= $block->escapeHtml(__('or paste a list of identifiers (public_id), separated by comma/space/newline:')) ?></label></p>
+  <textarea id="oc-ids" rows="4" style="width:100%;max-width:760px" placeholder="OC.IND.1, OC.IND.2, …"></textarea>
+  <p>
+    <button type="button" class="action-default" id="oc-import-btn"><?= $block->escapeHtml(__('Import')) ?></button>
+    <button type="button" class="action-default" id="oc-cancel-btn" style="display:none"><?= $block->escapeHtml(__('Cancel')) ?></button>
+  </p>
+  <div id="oc-status" style="margin:12px 0;display:none">
+    <span class="oc-spinner" id="oc-spinner"></span>
+    <span id="oc-progress" style="font-weight:bold"></span>
+    <div class="oc-bar-wrap"><div class="oc-bar" id="oc-bar"></div></div>
+    <div id="oc-summary" style="margin-top:8px;color:#333"></div>
+  </div>
+  <pre id="oc-log"></pre>
+</div>
+<script>window.OneCatalogCfg = <?= /* @noEscape */ $block->getCfgJson() ?>;</script>
+<script src="<?= $block->escapeUrl($block->jsUrl('picker-loader.js')) ?>"></script>
+<script src="<?= $block->escapeUrl($block->jsUrl('admin-import.js')) ?>"></script>
